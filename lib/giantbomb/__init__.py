@@ -14,7 +14,9 @@ except ImportError:
         try:
             from django.utils import simplejson
         except:
-            raise Exception("GiantBomb wrapper requires the simplejson library (or Python 2.6) to work. http://www.undefined.org/python/")
+            raise Exception("GiantBomb wrapper requires the simplejson "
+                            "library (or Python 2.6) to work. "
+                            "http://www.undefined.org/python/")
 
 
 class GiantBombError(Exception):
@@ -38,44 +40,101 @@ class Api:
         if resp['status_code'] == 1:
             return resp['results']
         else:
-            raise GiantBombError('Error code %s: %s' % (resp['status_code'], resp['error']))
+            raise GiantBombError('Error code %s: %s' % (resp['status_code'],
+                                                        resp['error']))
 
-    def search(self, query, offset=0):
-        results = simplejson.load(urllib2.urlopen(self.base_url + "/search/?api_key=%s&resources=game&query=%s&field_list=id,name,image&offset=%s&format=json" % (self.api_key, urllib2.quote(query), offset)))
+    def _build_url(self, query, params=None):
+        url = self.base_url + "/%s/?api_key=%s&format=json" % (query,
+                                                               self.api_key)
+        for key, value in params.iteritems():
+            if isinstance(value, dict):
+                url += "&%s=" % key
+                url += ";".join([subkey+":"+str(subvalue)
+                                 for subkey, subvalue in filter.iteritems()])
+            else:
+                url += "&%s=%s" % (key, str(value))
+
+        return url
+        
+def search(self, query, offset=0, resources=None, filter=None, limit=None):
+        params = {"offset": offset}
+        if resource is not None:
+            params['resources'] = resources
+        if filter is not None:
+            params['filter'] = filter
+        if limit is not None:
+            params['limit'] = limit
+        
+        url = self._build_url("search", params=params)
+
+        results = simplejson.load(urllib2.urlopen(url))
         return [SearchResult.NewFromJsonDict(x) for x in self.checkResponse(results)]
 
     def getGame(self, id):
-        if type(id).__name__ != 'int':
+        if isinstance(id, int):
             id = id.id
-        game = simplejson.load(urllib2.urlopen(self.base_url + "/game/%s/?api_key=%s&field_list=id,name,deck,publishers,developers,franchises,image,images,genres,original_release_date,platforms,videos,api_detail_url,site_detail_url,date_added,date_last_updated&format=json" % (id, self.api_key)))
+        url = self._build_url('game/%s' % id)
+        game = simplejson.load(urllib2.urlopen(url))
         return Game.NewFromJsonDict(self.checkResponse(game))
 
-    def getGames(self, plat, offset=0):
-        if type(plat).__name__ != 'int':
-            plat = plat.id
-        games = simplejson.load(urllib2.urlopen(self.base_url + "/games/?api_key=%s&field_list=id,name,deck,image,images,genres,original_release_date,api_detail_url,site_detail_url&platforms=%s&offset=%s&format=json" % (self.api_key, plat, offset)))
-        return [SearchResult.NewFromJsonDict(x) for x in self.checkResponse(games)]
+    def getGames(self, plat=None, offset=0, filter=None, limit=None):
+        params = {"offset": offset}
+        if plat is not None:
+            if type(plat).__name__ != 'int':
+                plat = plat.id
+            params['platforms'] = plat
+        if filter is not None:
+            params['filter'] = filter
+        if limit is not None:
+            params['limit'] = limit
+        
+        url = self._build_url("games", params=params)
+                       
+        games = simplejson.load(urllib2.urlopen(url))
+        return [SearchResult.NewFromJsonDict(x)
+                for x in self.checkResponse(games)]
 
     def getVideo(self, id):
-        if type(id).__name__ != 'int':
+        if isinstance(id, int):
             id = id.id
-        video = simplejson.load(urllib2.urlopen(self.base_url + "/video/%s/?api_key=%s&format=json" % (id, self.api_key)))
+        url = self._build_url('video/%s' % id)
+        video = simplejson.load(urllib2.urlopen(url))
         return Video.NewFromJsonDict(self.checkResponse(video))
 
     def getPlatform(self, id):
-        platform = simplejson.load(urllib2.urlopen(self.base_url + "/platform/%s/?api_key=%s&&field_list=id,name,abbreviation,deck,api_detail_url,image&format=json" % (id, self.api_key)))
+        if isinstance(id, int):
+            id = id.id
+        url = self._build_url('platform/%s' % id)
+        platform = simplejson.load(urllib2.urlopen(url))
         return Platform.NewFromJsonDict(self.checkResponse(platform))
 
-    def getPlatforms(self, offset=0):
-        platforms = simplejson.load(urllib2.urlopen(self.base_url + "/platforms/?api_key=%s&field_list=id,name,abbreviation,deck&offset=%s&format=json" % (self.api_key, offset)))
+    def getPlatforms(self, offset=0, filter=None, limit=None):
+        params = {"offset": offset}
+        if filter is not None:
+            params['filter'] = filter
+        if limit is not None:
+            params['limit'] = limit
+        
+        url = self._build_url("platforms", params=params)
+                       
+        platforms = simplejson.load(urllib2.urlopen(url))
         return self.checkResponse(platforms)
         
     def getFranchise(self, id):
-        franchise = simplejson.load(urllib2.urlopen(self.base_url + "/franchise/%s/?api_key=%s&&field_list=id,name,deck,api_detail_url,image&format=json" % (id, self.api_key)))
+        if isinstance(id, int):
+            id = id.id
+        url = self._build_url('franchise/%s' % id)
+        franchise = simplejson.load(urllib2.urlopen(url))
         return Franchise.NewFromJsonDict(self.checkResponse(franchise))
         
-    def getFranchises(self, offset=0):
-        platforms = simplejson.load(urllib2.urlopen(self.base_url + "/franchises/?api_key=%s&field_list=id,name,deck&offset=%s&format=json" % (self.api_key, offset)))
+    def getFranchises(self, offset=0, limit=None):
+        params = {"offset": offset}
+        if limit is not None:
+            params['limit'] = limit
+        
+        url = self._build_url("franchises", params=params)
+                       
+        platforms = simplejson.load(urllib2.urlopen(url))
         return self.checkResponse(platforms)
 
 

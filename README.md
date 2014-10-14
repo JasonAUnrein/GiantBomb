@@ -1,3 +1,7 @@
+[![travis ci build state](https://travis-ci.org/JasonAUnrein/GiantBomb.svg?branch=master)](https://travis-ci.org/JasonAUnrein/GiantBomb)
+
+[![rtd state](https://readthedocs.org/projects/GiantBomb/badge/?version=latest)](https://readthedocs.org/projects/GiantBomb/?badge=latest)
+
 ## UNDER MIT LICENSE
 
 Copyright (C) 2011-2012 Leandro Voltolino <xupisco@gmail.com>
@@ -9,8 +13,8 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-## Python wrapper for Giantbomb API!
 
+## Python wrapper for Giantbomb API!
 **Get your API Key at http://api.giantbomb.com**
 
 Basic usage:  
