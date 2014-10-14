@@ -6,3 +6,4 @@ _matrix/
 .project
 .pydevproject
 giantbomb.egg-info/
+lib/giantbomb/tests/key.py

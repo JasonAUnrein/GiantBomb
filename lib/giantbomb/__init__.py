@@ -56,7 +56,7 @@ class Api:
 
         return url
         
-def search(self, query, offset=0, resources=None, filter=None, limit=None):
+    def search(self, query, offset=0, resources=None, filter=None, limit=None):
         params = {"offset": offset}
         if resource is not None:
             params['resources'] = resources
