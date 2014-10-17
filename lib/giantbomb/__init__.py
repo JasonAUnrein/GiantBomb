@@ -33,10 +33,10 @@ class Api:
         self.base_url = 'http://api.giantbomb.com/'
 
     @staticmethod
-    def defaultRepr(obj):
+    def default_repr(obj):
         return unicode("<%s: %s>" % (obj.id, obj.name)).encode('utf-8')
 
-    def checkResponse(self, resp):
+    def check_response(self, resp):
         if resp['status_code'] == 1:
             return resp['results']
         else:
@@ -44,7 +44,7 @@ class Api:
                                                         resp['error']))
 
     def _build_url(self, query, params=None):
-        url = self.base_url + "/%s/?api_key=%s&format=json" % (query,
+        url = self.base_url + "%s/?api_key=%s&format=json" % (query,
                                                                self.api_key)
         for key, value in params.iteritems():
             if isinstance(value, dict):
@@ -53,7 +53,6 @@ class Api:
                                  for subkey, subvalue in filter.iteritems()])
             else:
                 url += "&%s=%s" % (key, str(value))
-
         return url
 
     def search(self, query, offset=0, resources=None, filter=None, limit=None):
@@ -69,16 +68,16 @@ class Api:
 
         results = simplejson.load(urllib2.urlopen(url))
         return [SearchResult.NewFromJsonDict(x)
-                for x in self.checkResponse(results)]
+                for x in self.check_response(results)]
 
-    def getGame(self, id):
+    def get_game(self, id):
         if isinstance(id, int):
             id = id.id
         url = self._build_url('game/%s' % id)
         game = simplejson.load(urllib2.urlopen(url))
-        return Game.NewFromJsonDict(self.checkResponse(game))
+        return Game.NewFromJsonDict(self.check_response(game))
 
-    def getGames(self, plat=None, offset=0, filter=None, limit=None):
+    def get_games(self, plat=None, offset=0, filter=None, limit=None):
         params = {"offset": offset}
         if plat is not None:
             if type(plat).__name__ != 'int':
@@ -93,23 +92,23 @@ class Api:
 
         games = simplejson.load(urllib2.urlopen(url))
         return [SearchResult.NewFromJsonDict(x)
-                for x in self.checkResponse(games)]
+                for x in self.check_response(games)]
 
-    def getVideo(self, id):
+    def get_video(self, id):
         if isinstance(id, int):
             id = id.id
         url = self._build_url('video/%s' % id)
         video = simplejson.load(urllib2.urlopen(url))
-        return Video.NewFromJsonDict(self.checkResponse(video))
+        return Video.NewFromJsonDict(self.check_response(video))
 
-    def getPlatform(self, id):
+    def get_platform(self, id):
         if isinstance(id, int):
             id = id.id
         url = self._build_url('platform/%s' % id)
         platform = simplejson.load(urllib2.urlopen(url))
-        return Platform.NewFromJsonDict(self.checkResponse(platform))
+        return Platform.NewFromJsonDict(self.check_response(platform))
 
-    def getPlatforms(self, offset=0, filter=None, limit=None):
+    def get_platforms(self, offset=0, filter=None, limit=None):
         params = {"offset": offset}
         if filter is not None:
             params['filter'] = filter
@@ -119,16 +118,16 @@ class Api:
         url = self._build_url("platforms", params=params)
 
         platforms = simplejson.load(urllib2.urlopen(url))
-        return self.checkResponse(platforms)
+        return self.check_response(platforms)
 
-    def getFranchise(self, id):
+    def get_franchise(self, id):
         if isinstance(id, int):
             id = id.id
         url = self._build_url('franchise/%s' % id)
         franchise = simplejson.load(urllib2.urlopen(url))
-        return Franchise.NewFromJsonDict(self.checkResponse(franchise))
+        return Franchise.NewFromJsonDict(self.check_response(franchise))
 
-    def getFranchises(self, offset=0, limit=None):
+    def get_franchises(self, offset=0, limit=None):
         params = {"offset": offset}
         if limit is not None:
             params['limit'] = limit
@@ -136,7 +135,7 @@ class Api:
         url = self._build_url("franchises", params=params)
 
         platforms = simplejson.load(urllib2.urlopen(url))
-        return self.checkResponse(platforms)
+        return self.check_response(platforms)
 
 
 class Game:
@@ -213,7 +212,7 @@ class Game:
         return None
 
     def __repr__(self):
-        return Api.defaultRepr(self)
+        return Api.default_repr(self)
 
 
 class Platform:
@@ -245,7 +244,7 @@ class Platform:
         return None
 
     def __repr__(self):
-        return Api.defaultRepr(self)
+        return Api.default_repr(self)
 
 
 class Franchise:
@@ -274,7 +273,8 @@ class Franchise:
         return None
 
     def __repr__(self):
-        return Api.defaultRepr(self)
+        return Api.default_repr(self)
+
 
 
 class Image:
@@ -327,7 +327,7 @@ class Genre:
         return None
 
     def __repr__(self):
-        return Api.defaultRepr(self)
+        return Api.default_repr(self)
 
 
 class Videos:
@@ -358,7 +358,7 @@ class Videos:
         return None
 
     def __repr__(self):
-        return Api.defaultRepr(self)
+        return Api.default_repr(self)
 
 
 class Video:
@@ -392,7 +392,7 @@ class Video:
         return None
 
     def __repr__(self):
-        return Api.defaultRepr(self)
+        return Api.default_repr(self)
 
 
 class SearchResult:
@@ -418,4 +418,4 @@ class SearchResult:
         return None
 
     def __repr__(self):
-        return Api.defaultRepr(self)
+        return Api.default_repr(self)
