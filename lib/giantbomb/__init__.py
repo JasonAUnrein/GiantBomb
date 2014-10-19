@@ -1,4 +1,5 @@
 import urllib2
+import urllib
 from collections import Iterable
 
 
@@ -45,33 +46,38 @@ class Api:
 
     def _build_url(self, query, params=None):
         url = self.base_url + "%s/?api_key=%s&format=json" % (query,
-                                                               self.api_key)
-        for key, value in params.iteritems():
-            if isinstance(value, dict):
-                url += "&%s=" % key
-                url += ";".join([subkey + ":" + str(subvalue)
-                                 for subkey, subvalue in filter.iteritems()])
-            else:
-                url += "&%s=%s" % (key, str(value))
+                                                              self.api_key)
+        if params:
+            for key, value in params.iteritems():
+                if isinstance(value, dict):
+                    vals = [subkey + ":" + str(subvalue)
+                            for subkey, subvalue in value.iteritems()]
+                    url += "&%s=" % key
+                    url += ";".join(vals)
+                else:
+                    url += "&%s=%s" % (key, str(value))
         return url
 
-    def search(self, query, offset=0, resources=None, filter=None, limit=None):
-        params = {"offset": offset, "query": query}
-        if resources is not None:
-            params['resources'] = resources
-        if filter is not None:
-            params['filter'] = filter
+    def get_franchise(self, id):
+        if not isinstance(id, int):
+            id = id.id
+        url = self._build_url('franchise/%s' % id)
+        franchise = simplejson.load(urllib2.urlopen(url))
+        return Franchise.NewFromJsonDict(self.check_response(franchise))
+
+    def get_franchises(self, offset=0, limit=None):
+        params = {"offset": offset}
         if limit is not None:
             params['limit'] = limit
 
-        url = self._build_url("search", params=params)
+        url = self._build_url("franchises", params=params)
 
-        results = simplejson.load(urllib2.urlopen(url))
-        return [SearchResult.NewFromJsonDict(x)
-                for x in self.check_response(results)]
+        franchise = simplejson.load(urllib2.urlopen(url))
+        return [Franchise.NewFromJsonDict(x)
+                for x in self.check_response(franchise)]
 
     def get_game(self, id):
-        if isinstance(id, int):
+        if not isinstance(id, int):
             id = id.id
         url = self._build_url('game/%s' % id)
         game = simplejson.load(urllib2.urlopen(url))
@@ -94,15 +100,8 @@ class Api:
         return [SearchResult.NewFromJsonDict(x)
                 for x in self.check_response(games)]
 
-    def get_video(self, id):
-        if isinstance(id, int):
-            id = id.id
-        url = self._build_url('video/%s' % id)
-        video = simplejson.load(urllib2.urlopen(url))
-        return Video.NewFromJsonDict(self.check_response(video))
-
     def get_platform(self, id):
-        if isinstance(id, int):
+        if not isinstance(id, int):
             id = id.id
         url = self._build_url('platform/%s' % id)
         platform = simplejson.load(urllib2.urlopen(url))
@@ -118,24 +117,31 @@ class Api:
         url = self._build_url("platforms", params=params)
 
         platforms = simplejson.load(urllib2.urlopen(url))
-        return self.check_response(platforms)
+        return [Platform.NewFromJsonDict(x)
+                for x in self.check_response(platforms)]
 
-    def get_franchise(self, id):
-        if isinstance(id, int):
-            id = id.id
-        url = self._build_url('franchise/%s' % id)
-        franchise = simplejson.load(urllib2.urlopen(url))
-        return Franchise.NewFromJsonDict(self.check_response(franchise))
-
-    def get_franchises(self, offset=0, limit=None):
-        params = {"offset": offset}
+    def search(self, query, offset=0, resources=None, filter=None, limit=None):
+        params = {"offset": offset,
+                  "query": urllib.quote(query, '').replace('-', '%2D')}
+        if resources is not None:
+            params['resources'] = resources
+        if filter is not None:
+            params['filter'] = filter
         if limit is not None:
             params['limit'] = limit
 
-        url = self._build_url("franchises", params=params)
+        url = self._build_url("search", params=params)
 
-        platforms = simplejson.load(urllib2.urlopen(url))
-        return self.check_response(platforms)
+        results = simplejson.load(urllib2.urlopen(url))
+        return [SearchResult.NewFromJsonDict(x)
+                for x in self.check_response(results)]
+
+    def get_video(self, id):
+        if not isinstance(id, int):
+            id = id.id
+        url = self._build_url('video/%s' % id)
+        video = simplejson.load(urllib2.urlopen(url))
+        return Video.NewFromJsonDict(self.check_response(video))
 
 
 class Game:
@@ -274,7 +280,6 @@ class Franchise:
 
     def __repr__(self):
         return Api.default_repr(self)
-
 
 
 class Image:
