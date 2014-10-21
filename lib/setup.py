@@ -15,23 +15,23 @@ THIS_DIR = os.path.abspath(os.path.dirname(__file__))
 PKG_DIR = os.path.join(THIS_DIR, 'lib')
 sys.path.append(PKG_DIR)
 # Read the version from our project
-from libdlm import __version__
+from giantbomb import __version__
 
 if __name__ == '__main__':
     INSTALL_REQUIRES = ['furl>=0.3.95', 'orderedmultidict>=0.7.3']
     setup(
-        name="libdlm",
+        name="giantbomb",
         version=__version__,
         description="Download Manager Library",
         author="Jason Unrein",
-        url="https://github.com/JasonAUnrein/libdlm",
-        download_url="https://github.com/JasonAUnrein/libdlm/blob/master/release/libdlm-{0}.tar.gz".format(__version__),
+        url="https://github.com/JasonAUnrein/giantbomb",
+        download_url="https://github.com/JasonAUnrein/giantbomb/blob/master/release/giantbomb-{0}.tar.gz".format(__version__),
         install_requires=[],
         packages=find_packages(),
-        package_data={"libdlm": ['.*']},
+        package_data={"giantbomb": ['.*']},
         zip_safe=True,
         include_package_data=True,
-        test_suite="tests",
+        test_suite="giantbomb.tests",
 
         classifiers=[
             'Development Status :: 5 - Production/Stable',

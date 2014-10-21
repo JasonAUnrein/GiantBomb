@@ -29,7 +29,7 @@ Basic usage:
 Documentation
 -------------
 
-Documentation is hosted on [libdlm.readthedocs.org](http://GiantBomb.readthedocs.org/en/latest/)
+Documentation is hosted on [giantbomb.readthedocs.org](http://GiantBomb.readthedocs.org/en/latest/)
 
 Install
 -------

@@ -1,6 +1,6 @@
 [![travis ci build state](https://travis-ci.org/JasonAUnrein/GiantBomb.svg?branch=master)](https://travis-ci.org/JasonAUnrein/GiantBomb)
 
-[![rtd state](https://readthedocs.org/projects/GiantBomb/badge/?version=latest)](https://readthedocs.org/projects/GiantBomb/?badge=latest)
+[![rtd state](https://readthedocs.org/projects/giantbomb/badge/?version=latest)](https://readthedocs.org/projects/giantbomb/?badge=latest)
 
 ## UNDER MIT LICENSE
 
