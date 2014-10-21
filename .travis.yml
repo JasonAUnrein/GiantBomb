@@ -1,8 +1,9 @@
 language: python
 python:
-  - "2.7"
-  - "2.6"
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+- '2.7'
+- '2.6'
 install: pip install -U setuptools
-# command to run tests, e.g. python setup.py test
-script:  python lib/setup.py test
+script: python lib/setup.py test
+env:
+  global:
+    secure: B13fzy9LTK591pdxixOBaW8plW+3LFlTt6PxInoYiLghbpV2toPZV6j3M+cMdOsQAfdvbcWTSNVPrC3BKcayjekl2lBiGZo5c5QmAF7aZBNAI8AxjrjEsEMk7xx7sOP3qq2QZL/+EwEIYkJ56S2U9ln4qg5c+5/YNbfzggCeYZc=

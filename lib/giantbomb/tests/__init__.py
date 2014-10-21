@@ -3,7 +3,11 @@
 # Imports #####################################################################
 import unittest
 import giantbomb
-from giantbomb.tests.key import GIANT_BOMB_KEY
+try:
+    from giantbomb.tests.key import GIANT_BOMB_KEY
+except ImportError:
+    import os
+    os.environ['GIANT_BOMB_KEY']
 
 
 ###############################################################################
