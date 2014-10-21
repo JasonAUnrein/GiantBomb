@@ -7,7 +7,7 @@ try:
     from giantbomb.tests.key import GIANT_BOMB_KEY
 except ImportError:
     import os
-    os.environ['GIANT_BOMB_KEY']
+    GIANT_BOMB_KEY = os.environ['GIANT_BOMB_KEY']
 
 
 ###############################################################################
