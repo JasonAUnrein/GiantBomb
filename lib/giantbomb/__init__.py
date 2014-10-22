@@ -1,11 +1,12 @@
-import urllib2
-import urllib
-from collections import Iterable
-
+'''
+GiantBomb is an interface to the API on giantbomb.com.
+'''
 
 __author__ = "Leandro Voltolino <xupisco@gmail.com>"
 __version__ = "0.7"
 
+import urllib2
+import urllib
 try:
     import simplejson
 except ImportError:
@@ -21,30 +22,44 @@ except ImportError:
 
 
 class GiantBombError(Exception):
-    def __init__(self, msg):
-        self.msg = msg
+    '''Generic exception class'''
 
-    def __str__(self):
-        return repr(self.msg)
+    pass
+
+
+def check_response(resp):
+    '''
+    Performs a quick verification of the response to ensure we have
+    valid data
+    '''
+
+    if resp['status_code'] == 1:
+        return resp['results']
+    else:
+        raise GiantBombError('Error code %s: %s' % (resp['status_code'],
+                                                    resp['error']))
 
 
 class Api:
+    '''
+    The primary interface for the GiantBomb module.  Instantiate this with
+    your api key and then call the appropriate methods to access the data
+    from the giantbomb servers.
+    '''
+
     def __init__(self, api_key):
         self.api_key = api_key
         self.base_url = 'http://api.giantbomb.com/'
 
     @staticmethod
     def default_repr(obj):
+        '''provide a basic representation of this object'''
+
         return unicode("<%s: %s>" % (obj.id, obj.name)).encode('utf-8')
 
-    def check_response(self, resp):
-        if resp['status_code'] == 1:
-            return resp['results']
-        else:
-            raise GiantBombError('Error code %s: %s' % (resp['status_code'],
-                                                        resp['error']))
-
     def _build_url(self, query, params=None):
+        '''Helper to build the URL from a parameter dictionary'''
+
         url = self.base_url + "%s/?api_key=%s&format=json" % (query,
                                                               self.api_key)
         if params:
@@ -58,14 +73,24 @@ class Api:
                     url += "&%s=%s" % (key, str(value))
         return url
 
-    def get_franchise(self, id):
-        if not isinstance(id, int):
-            id = id.id
-        url = self._build_url('franchise/%s' % id)
+    def get_franchise(self, gbid):
+        '''
+        Get the franchise:
+        http://www.giantbomb.com/api/documentation#toc-0-12
+        '''
+
+        if not isinstance(gbid, int):
+            gbid = gbid.id
+        url = self._build_url('franchise/%s' % gbid)
         franchise = simplejson.load(urllib2.urlopen(url))
-        return Franchise.NewFromJsonDict(self.check_response(franchise))
+        return Franchise(check_response(franchise))
 
     def get_franchises(self, offset=0, limit=None):
+        '''
+        Get the franchises:
+        http://www.giantbomb.com/api/documentation#toc-0-13
+        '''
+
         params = {"offset": offset}
         if limit is not None:
             params['limit'] = limit
@@ -73,354 +98,219 @@ class Api:
         url = self._build_url("franchises", params=params)
 
         franchise = simplejson.load(urllib2.urlopen(url))
-        return [Franchise.NewFromJsonDict(x)
-                for x in self.check_response(franchise)]
+        return [Franchise(x)
+                for x in check_response(franchise)]
 
-    def get_game(self, id):
-        if not isinstance(id, int):
-            id = id.id
-        url = self._build_url('game/%s' % id)
+    def get_game(self, gbid):
+        '''
+        Get the game
+        http://www.giantbomb.com/api/documentation#toc-0-14
+        '''
+
+        if not isinstance(gbid, int):
+            gbid = gbid.id
+        url = self._build_url('game/%s' % gbid)
         game = simplejson.load(urllib2.urlopen(url))
-        return Game.NewFromJsonDict(self.check_response(game))
+        return Game(check_response(game))
 
-    def get_games(self, plat=None, offset=0, filter=None, limit=None):
+    def get_games(self, plat=None, offset=0, gbfilter=None, limit=None):
+        '''
+        Get the games
+        http://www.giantbomb.com/api/documentation#toc-0-15
+        '''
+
         params = {"offset": offset}
         if plat is not None:
             if type(plat).__name__ != 'int':
                 plat = plat.id
             params['platforms'] = plat
-        if filter is not None:
-            params['filter'] = filter
+        if gbfilter is not None:
+            params['filter'] = gbfilter
         if limit is not None:
             params['limit'] = limit
 
         url = self._build_url("games", params=params)
 
         games = simplejson.load(urllib2.urlopen(url))
-        return [SearchResult.NewFromJsonDict(x)
-                for x in self.check_response(games)]
+        return [SearchResult(x)
+                for x in check_response(games)]
 
-    def get_platform(self, id):
-        if not isinstance(id, int):
-            id = id.id
-        url = self._build_url('platform/%s' % id)
+    def get_platform(self, gbid):
+        '''
+        Get the platform
+        http://www.giantbomb.com/api/documentation#toc-0-26
+        '''
+
+        if not isinstance(gbid, int):
+            gbid = gbid.id
+        url = self._build_url('platform/%s' % gbid)
         platform = simplejson.load(urllib2.urlopen(url))
-        return Platform.NewFromJsonDict(self.check_response(platform))
+        return Platform(check_response(platform))
 
-    def get_platforms(self, offset=0, filter=None, limit=None):
+    def get_platforms(self, offset=0, gbfilter=None, limit=None):
+        '''
+        Get the platforms
+        http://www.giantbomb.com/api/documentation#toc-0-27
+        '''
+
         params = {"offset": offset}
-        if filter is not None:
-            params['filter'] = filter
+        if gbfilter is not None:
+            params['filter'] = gbfilter
         if limit is not None:
             params['limit'] = limit
 
         url = self._build_url("platforms", params=params)
 
         platforms = simplejson.load(urllib2.urlopen(url))
-        return [Platform.NewFromJsonDict(x)
-                for x in self.check_response(platforms)]
+        return [Platform(x)
+                for x in check_response(platforms)]
 
-    def search(self, query, offset=0, resources=None, filter=None, limit=None):
+    def search(self, query, offset=0, resources=None, gbfilter=None,
+               limit=None):
+        '''
+        Perform a search
+        http://www.giantbomb.com/api/documentation#toc-0-38
+        '''
+
         params = {"offset": offset,
                   "query": urllib.quote(query, '').replace('-', '%2D')}
         if resources is not None:
             params['resources'] = resources
-        if filter is not None:
-            params['filter'] = filter
+        if gbfilter is not None:
+            params['filter'] = gbfilter
         if limit is not None:
             params['limit'] = limit
 
         url = self._build_url("search", params=params)
 
         results = simplejson.load(urllib2.urlopen(url))
-        return [SearchResult.NewFromJsonDict(x)
-                for x in self.check_response(results)]
+        return [SearchResult(x)
+                for x in check_response(results)]
 
-    def get_video(self, id):
-        if not isinstance(id, int):
-            id = id.id
-        url = self._build_url('video/%s' % id)
+    def get_video(self, gbid):
+        '''
+        Get a video
+        http://www.giantbomb.com/api/documentation#toc-0-44
+        '''
+
+        if not isinstance(gbid, int):
+            gbid = gbid.id
+        url = self._build_url('video/%s' % gbid)
         video = simplejson.load(urllib2.urlopen(url))
-        return Video.NewFromJsonDict(self.check_response(video))
+        return Video(check_response(video))
 
 
-class Game:
-    def __init__(self,
-                 id=None,
-                 name=None,
-                 deck=None,
-                 platforms=None,
-                 developers=None,
-                 publishers=None,
-                 franchises=None,
-                 image=None,
-                 images=None,
-                 genres=None,
-                 original_release_date=None,
-                 videos=None,
-                 api_detail_url=None,
-                 site_detail_url=None,
-                 date_added_gb=None,
-                 date_last_updated_gb=None):
+def update(obj, args):
+    '''Update an objects dictionary using args'''
 
-        self.id = id
-        self.name = name
-        self.deck = deck
-        self.platforms = platforms
-        self.developers = developers
-        self.publishers = publishers
-        self.franchises = franchises
-        self.image = image
-        self.images = images
-        self.genres = genres
-        self.original_release_date = original_release_date
-        self.videos = videos
-        self.api_detail_url = api_detail_url
-        self.site_detail_url = site_detail_url
-        self.date_added_gb = date_added_gb
-        self.date_last_updated_gb = date_last_updated_gb
+    for key, value in args.items():
+        setattr(obj, key, value)
 
-    @staticmethod
-    def NewFromJsonDict(data):
-        if data:
-            franchises_check = data.get('franchises', [])
-            platforms_check = data.get('platforms', [])
-            images_check = data.get('images', [])
-            genres_check = data.get('genres', [])
-            videos_check = data.get('videos_check', [])
-            list_check = {'franchise': franchises_check,
-                          'platform': platforms_check,
-                          'image': images_check,
-                          'genre': genres_check,
-                          'video': videos_check}
-            for item in list_check:
-                if not isinstance(list_check[item], Iterable):
-                    list_check[item] = None
 
-            return Game(id=data.get('id'),
-                        name=data.get('name', None),
-                        deck=data.get('deck', None),
-                        platforms=list_check['platform'],
-                        developers=data.get('developers', None),
-                        publishers=data.get('publishers', None),
-                        franchises=list_check['franchise'],
-                        image=Image.NewFromJsonDict(data.get('image', [])),
-                        images=list_check['image'],
-                        genres=list_check['genre'],
-                        original_release_date=data.get('original_release_date',
-                                                       None),
-                        videos=list_check['video'],
-                        api_detail_url=data.get('api_detail_url', None),
-                        site_detail_url=data.get('site_detail_url', None),
-                        date_added_gb=data.get('date_added', None),
-                        date_last_updated_gb=data.get('date_last_updated',
-                                                      None))
-        return None
+class SimpleObject(object):
+    '''
+    A basic object that updates its dictionary using json data or kwargs
+    '''
+
+    def __init__(self, json=None, **kwargs):
+        if json:
+            self.__dict__.update(json)
+        self.__dict__.update(kwargs)
 
     def __repr__(self):
         return Api.default_repr(self)
 
 
-class Platform:
-    def __init__(self,
-                 id=None,
-                 name=None,
-                 abbreviation=None,
-                 deck=None,
-                 api_detail_url=None,
-                 image=None):
+class Franchise(SimpleObject):
+    '''Represents the Franchise Object'''
 
-        self.id = id
-        self.name = name
-        self.abbreviation = abbreviation
-        self.deck = deck
-        self.api_detail_url = api_detail_url
-        self.image = image
-
-    @staticmethod
-    def NewFromJsonDict(data):
-        if data:
-            return Platform(id=data.get('id'),
-                            name=data.get('name', None),
-                            abbreviation=data.get('abbreviation', None),
-                            deck=data.get('deck', None),
-                            api_detail_url=data.get('api_detail_url', None),
-                            image=Image.NewFromJsonDict(data.get('image',
-                                                                 None)))
-        return None
-
-    def __repr__(self):
-        return Api.default_repr(self)
+    pass
 
 
-class Franchise:
-    def __init__(self,
-                 id=None,
-                 name=None,
-                 deck=None,
-                 api_detail_url=None,
-                 image=None):
+class Game(SimpleObject):
+    '''Reprensents a Game'''
 
-        self.id = id
-        self.name = name
-        self.deck = deck
-        self.api_detail_url = api_detail_url
-        self.image = image
+    def __init__(self, json=None, **kwargs):
+        self.platforms = []
+        self.json = json
 
-    @staticmethod
-    def NewFromJsonDict(data):
-        if data:
-            return Franchise(id=data.get('id'),
-                             name=data.get('name', None),
-                             deck=data.get('deck', None),
-                             api_detail_url=data.get('api_detail_url', None),
-                             image=Image.NewFromJsonDict(data.get('image',
-                                                                  None)))
-        return None
+        if json:
+            if json.get('platforms'):
+                self.platforms = [Platform(plat)
+                                  for plat in list(json.pop('platforms', []))]
 
-    def __repr__(self):
-        return Api.default_repr(self)
+        if kwargs.get('platforms'):
+            self.platforms.extend([Platform(plat) for plat in
+                                   list(kwargs.pop('platforms', []))])
+
+        super(Game, self).__init__(json=json, **kwargs)
 
 
-class Image:
-    def __init__(self,
-                 icon=None,
-                 medium=None,
-                 tiny=None,
-                 small=None,
-                 thumb=None,
-                 screen=None,
-                 super=None):
+class Genre(SimpleObject):
+    '''Reprensents a Genre'''
 
-        self.icon = icon
-        self.medium = medium
-        self.tiny = tiny
-        self.small = small
-        self.thumb = thumb
-        self.screen = screen
-        self.super = super
-
-    @staticmethod
-    def NewFromJsonDict(data):
-        if data:
-            return Image(icon=data.get('icon_url', None),
-                         medium=data.get('medium_url', None),
-                         tiny=data.get('tiny_url', None),
-                         small=data.get('small_url', None),
-                         thumb=data.get('thumb_url', None),
-                         screen=data.get('screen_url', None),
-                         super=data.get('super_url', None),)
-        return None
+    pass
 
 
-class Genre:
-    def __init__(self,
-                 id=None,
-                 name=None,
-                 api_detail_url=None):
+class Image(SimpleObject):
+    '''Reprensents an Image'''
 
-        self.id = id
-        self.name = name
-        self.api_detail_url = api_detail_url
-
-    @staticmethod
-    def NewFromJsonDict(data):
-        if data:
-            return Genre(id=data.get('id'),
-                         name=data.get('name', None),
-                         api_detail_url=data.get('api_detail_url', None))
-        return None
-
-    def __repr__(self):
-        return Api.default_repr(self)
+    pass
 
 
-class Videos:
-    def __init__(self,
-                 id=None,
-                 name=None,
-                 deck=None,
-                 image=None,
-                 url=None,
-                 publish_date=None):
+class Platform(SimpleObject):
+    '''Reprensents a Platform'''
 
-        self.id = id
-        self.name = name
-        self.deck = deck
-        self.image = image
-        self.url = url
-        self.publish_date = publish_date
+    _platforms = dict()
 
-    @staticmethod
-    def NewFromJsonDict(data):
-        if data:
-            return Videos(id=data.get('id'),
-                          name=data.get('name', None),
-                          deck=data.get('deck', None),
-                          image=Image.NewFromJsonDict(data.get('image', None)),
-                          url=data.get('url', None),
-                          publish_date=data.get('publish_date', None),)
-        return None
+    def __init__(self, json=None, **kwargs):
+        self.id = None
+        self.platforms = []
+        self.json = json
 
-    def __repr__(self):
-        return Api.default_repr(self)
+        super(Platform, self).__init__(json=json, **kwargs)
+
+        if self.id in self._platforms:
+            self = self._platforms[self.id]
+        else:
+            self._platforms[self.id] = self
 
 
-class Video:
-    def __init__(self,
-                 id=None,
-                 name=None,
-                 deck=None,
-                 image=None,
-                 url=None,
-                 publish_date=None,
-                 site_detail_url=None):
+class SearchResult(SimpleObject):
+    '''Reprensents search results'''
 
-        self.id = id
-        self.name = name
-        self.deck = deck
-        self.image = image
-        self.url = url
-        self.publish_date = publish_date
-        self.site_detail_url = site_detail_url
-
-    @staticmethod
-    def NewFromJsonDict(data):
-        if data:
-            return Video(id=data.get('id'),
-                         name=data.get('name', None),
-                         deck=data.get('deck', None),
-                         image=Image.NewFromJsonDict(data.get('image', None)),
-                         url=data.get('url', None),
-                         publish_date=data.get('publish_date', None),
-                         site_detail_url=data.get('site_detail_url', None))
-        return None
-
-    def __repr__(self):
-        return Api.default_repr(self)
+    pass
 
 
-class SearchResult:
-    def __init__(self,
-                 id=None,
-                 name=None,
-                 api_detail_url=None,
-                 image=None):
+class Video(SimpleObject):
+    '''Reprensents a Video'''
 
-        self.id = id
-        self.name = name
-        self.api_detail_url = api_detail_url
-        self.image = image
+    def __init__(self, json=None, **kwargs):
+        self.image = None
+        self.json = json
 
-    @staticmethod
-    def NewFromJsonDict(data):
-        if data:
-            return SearchResult(id=data.get('id'),
-                                name=data.get('name', None),
-                                api_detail_url=data.get('api_detail_url',
-                                                        None),
-                                image=data.get('image', None))
-        return None
+        if json:
+            if json.get('image'):
+                self.image = Image(json.pop('image', None))
 
-    def __repr__(self):
-        return Api.default_repr(self)
+        if kwargs.get('platforms'):
+            self.image = Image(kwargs.pop('image', None))
+
+        super(Video, self).__init__(json=json, **kwargs)
+
+
+class Videos(SimpleObject):
+    '''Reprensents multiple videos'''
+
+    def __init__(self, json=None, **kwargs):
+        self.image = None
+        self.json = json
+
+        if json:
+            if json.get('image'):
+                self.image = Image(json.pop('image', None))
+
+        if kwargs.get('platforms'):
+            self.image = Image(kwargs.pop('image', None))
+
+        super(Videos, self).__init__(json=json, **kwargs)

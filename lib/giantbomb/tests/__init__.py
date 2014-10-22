@@ -57,15 +57,15 @@ class SanityTest(unittest.TestCase):
         self.assertTrue(isinstance(results, giantbomb.SearchResult))
 
         results = self.gb.get_games(plat=self.plat_id, offset=10,
-                                    filter={'name': self.game_title})[0]
+                                    gbfilter={'name': self.game_title})[0]
         self.assertTrue(isinstance(results, giantbomb.SearchResult))
 
         results = self.gb.get_games(plat=self.plat_id,
-                                    filter={'name': self.game_title})[0]
+                                    gbfilter={'name': self.game_title})[0]
         self.assertTrue(isinstance(results, giantbomb.SearchResult))
 
         results = self.gb.get_games(plat=self.plat_id, limit=10,
-                                    filter={'name': self.game_title})
+                                    gbfilter={'name': self.game_title})
         self.assertTrue(isinstance(results[0], giantbomb.SearchResult))
         self.assertEqual(len(results), 10)
 
@@ -78,7 +78,7 @@ class SanityTest(unittest.TestCase):
         self.assertTrue(isinstance(results, giantbomb.Platform))
 
         results = self.gb.get_platforms(offset=1,
-                                        filter={'name': self.plat_name})[0]
+                                        gbfilter={'name': self.plat_name})[0]
         self.assertTrue(isinstance(results, giantbomb.Platform))
 
         results = self.gb.get_platforms(offset=1, limit=10)
