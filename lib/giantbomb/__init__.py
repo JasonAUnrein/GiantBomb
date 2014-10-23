@@ -7,6 +7,7 @@ __version__ = "0.7"
 
 import urllib2
 import urllib
+import functools
 try:
     import simplejson
 except ImportError:
@@ -49,7 +50,7 @@ class Api:
 
     def __init__(self, api_key):
         self.api_key = api_key
-        self.base_url = 'http://api.giantbomb.com/'
+        self.base_url = 'http://www.giantbomb.com/api/'
 
     @staticmethod
     def default_repr(obj):
@@ -73,17 +74,84 @@ class Api:
                     url += "&%s=%s" % (key, str(value))
         return url
 
-    def get_franchise(self, gbid):
+    def get_item(self, uri, cls, gbid):
         '''
-        Get the franchise:
-        http://www.giantbomb.com/api/documentation#toc-0-12
+        Generic method to get an item from giantbomb.  Intended to be
+        used by the __getattr__ method
         '''
 
         if not isinstance(gbid, int):
             gbid = gbid.id
-        url = self._build_url('franchise/%s' % gbid)
-        franchise = simplejson.load(urllib2.urlopen(url))
-        return Franchise(check_response(franchise))
+        url = self._build_url(uri % gbid)
+        resp = simplejson.load(urllib2.urlopen(url))
+        new_cls = globals()[cls]
+        obj = new_cls(check_response(resp))
+
+        return obj
+
+    def __getattr__(self, name):
+        '''
+        Create a partial call that can be used to call the appropriate method
+        with the stored parameters
+        '''
+        if name.startswith('get_'):
+            name = name.split('_', 1)[1]
+        if name in self.ITEMS:
+            return functools.partial(self.get_item, self.ITEMS[name][0],
+                                     self.ITEMS[name][1])
+
+    ITEMS = {'accessory': ('accessory/%s', 'Accessory'),
+             'character': ('character/%s', 'Character'),
+             # seems that chat has no data yet
+             # 'chat': ('chat/%s', 'Chat'),
+             'company': ('company/%s', 'Company'),
+             'concept': ('concept/%s', 'Concept'),
+             'franchise': ('franchise/%s', 'Franchise'),
+             'game': ('game/%s', 'Game'),
+             'game_rating': ('game_rating/%s', 'GameRating'),
+             'genre': ('genre/%s', 'Genre'),
+             'location': ('location/%s', 'Location'),
+             'object': ('object/%s', 'Object'),
+             'person': ('person/%s', 'Person'),
+             'platform': ('platform/%s', 'Platform'),
+             'promo': ('promo/%s', 'Promo'),
+             'rating_board': ('rating_board/%s', 'RatingBoard'),
+             'region': ('region/%s', 'Region'),
+             'release': ('release/%s', 'Release'),
+             'review': ('review/%s', 'Review'),
+             'theme': ('theme/%s', 'Theme'),
+             'user_review': ('user_review/%s', 'UserReview'),
+             'video': ('video/%s', 'Video')
+             # doesn't seem to be working at this time
+             # 'video_type': ('video_type/%s', 'VideoType')}
+             }
+    '''
+    LIST_ITEMS = {
+                  'accessories': ('accessories/', ),
+                  'characters': ('characters/', ),
+                  # seems that chat has no data yet
+                  # 'chats': ('chats/', ),
+                  'companys': ('companys/', ),
+                  'concepts': ('concepts/', ),
+                  'franchises': ('franchises/', ),
+                  'games': ('games/', ),
+                  'game_ratings': ('game_ratings/', ),
+                  'genres': ('genres/', ),
+                  'locations': ('locations/', ),
+                  'objects': ('objects/', ),
+                  'people': ('people/', ),
+                  'platforms': ('platforms/', ),
+                  'promos': ('promos/', ),
+                  'rating_boards': ('rating_boards/', ),
+                  'regions': ('regions/', ),
+                  'releases': ('releases/', ),
+                  'reviews': ('reviews/', ),
+                  'themes': ('themes/', ),
+                  'types': ('types/', ),
+                  'user_reviews': ('user_reviews/', ),
+                  'videos': ('videos/', ),
+                  'video_types': ('video_types/', )}
+    '''
 
     def get_franchises(self, offset=0, limit=None):
         '''
@@ -100,18 +168,6 @@ class Api:
         franchise = simplejson.load(urllib2.urlopen(url))
         return [Franchise(x)
                 for x in check_response(franchise)]
-
-    def get_game(self, gbid):
-        '''
-        Get the game
-        http://www.giantbomb.com/api/documentation#toc-0-14
-        '''
-
-        if not isinstance(gbid, int):
-            gbid = gbid.id
-        url = self._build_url('game/%s' % gbid)
-        game = simplejson.load(urllib2.urlopen(url))
-        return Game(check_response(game))
 
     def get_games(self, plat=None, offset=0, gbfilter=None, limit=None):
         '''
@@ -134,18 +190,6 @@ class Api:
         games = simplejson.load(urllib2.urlopen(url))
         return [SearchResult(x)
                 for x in check_response(games)]
-
-    def get_platform(self, gbid):
-        '''
-        Get the platform
-        http://www.giantbomb.com/api/documentation#toc-0-26
-        '''
-
-        if not isinstance(gbid, int):
-            gbid = gbid.id
-        url = self._build_url('platform/%s' % gbid)
-        platform = simplejson.load(urllib2.urlopen(url))
-        return Platform(check_response(platform))
 
     def get_platforms(self, offset=0, gbfilter=None, limit=None):
         '''
@@ -187,18 +231,6 @@ class Api:
         return [SearchResult(x)
                 for x in check_response(results)]
 
-    def get_video(self, gbid):
-        '''
-        Get a video
-        http://www.giantbomb.com/api/documentation#toc-0-44
-        '''
-
-        if not isinstance(gbid, int):
-            gbid = gbid.id
-        url = self._build_url('video/%s' % gbid)
-        video = simplejson.load(urllib2.urlopen(url))
-        return Video(check_response(video))
-
 
 def update(obj, args):
     '''Update an objects dictionary using args'''
@@ -221,10 +253,8 @@ class SimpleObject(object):
         return Api.default_repr(self)
 
 
-class Franchise(SimpleObject):
-    '''Represents the Franchise Object'''
-
-    pass
+for _, VALUE in Api.ITEMS.iteritems():
+    globals()[VALUE[1]] = type(VALUE[1], (SimpleObject,), {})
 
 
 class Game(SimpleObject):
@@ -244,18 +274,6 @@ class Game(SimpleObject):
                                    list(kwargs.pop('platforms', []))])
 
         super(Game, self).__init__(json=json, **kwargs)
-
-
-class Genre(SimpleObject):
-    '''Reprensents a Genre'''
-
-    pass
-
-
-class Image(SimpleObject):
-    '''Reprensents an Image'''
-
-    pass
 
 
 class Platform(SimpleObject):
@@ -278,6 +296,12 @@ class Platform(SimpleObject):
 
 class SearchResult(SimpleObject):
     '''Reprensents search results'''
+
+    pass
+
+
+class Image(SimpleObject):
+    '''Represents the collection of images in different returns'''
 
     pass
 

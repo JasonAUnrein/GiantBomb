@@ -19,9 +19,17 @@ class SanityTest(unittest.TestCase):
     def setUp(self):
         self.gb = giantbomb.Api(GIANT_BOMB_KEY)
 
-    def test_get_franchise(self):
-        results = self.gb.get_franchise(42)
-        self.assertTrue(isinstance(results, giantbomb.Franchise))
+    def test_get_items_type_check(self):
+        for name, values in giantbomb.Api.ITEMS.iteritems():
+            for i in (1, 10, 13, 100, 1000, 10000):
+                try:
+                    results = self.gb.__getattr__(name)(i)
+                    break
+                except giantbomb.GiantBombError:
+                    pass
+            else:
+                self.assertTrue(0, 1)
+            self.assertTrue(isinstance(results, getattr(giantbomb, values[1])))
 
     def test_get_franchises(self):
         results = self.gb.get_franchises(offset=1)[0]
@@ -69,10 +77,6 @@ class SanityTest(unittest.TestCase):
         self.assertTrue(isinstance(results[0], giantbomb.SearchResult))
         self.assertEqual(len(results), 10)
 
-    def test_get_platform(self):
-        results = self.gb.get_platform(42)
-        self.assertTrue(isinstance(results, giantbomb.Platform))
-
     def test_get_platforms(self):
         results = self.gb.get_platforms(offset=42)[0]
         self.assertTrue(isinstance(results, giantbomb.Platform))
@@ -88,10 +92,6 @@ class SanityTest(unittest.TestCase):
     def test_search(self):
         results = self.gb.search(self.game_title)[0]
         self.assertTrue(isinstance(results, giantbomb.SearchResult))
-
-    def test_get_video(self):
-        results = self.gb.get_video(42)
-        self.assertTrue(isinstance(results, giantbomb.Video))
 
 
 ###############################################################################
