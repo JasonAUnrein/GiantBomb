@@ -89,6 +89,25 @@ class Api:
 
         return obj
 
+    def get_items(self, uri, valid_args, cls, *args, **kwargs):
+        '''
+        Generic method to get an item from giantbomb.  Intended to be
+        used by the __getattr__ method
+        '''
+
+        params = {}
+        for idx, arg in args.enumerate():
+            params[valid_args[idx]] = arg
+        for key, value in kwargs:
+            idx += 1
+            params[key] = value
+        url = self._build_url(uri, params)
+        resp = simplejson.load(urllib2.urlopen(url))
+        new_cls = globals()[cls]
+        obj = new_cls(check_response(resp))
+
+        return obj
+
     def __getattr__(self, name):
         '''
         Create a partial call that can be used to call the appropriate method
@@ -99,6 +118,9 @@ class Api:
         if name in self.ITEMS:
             return functools.partial(self.get_item, self.ITEMS[name][0],
                                      self.ITEMS[name][1])
+        if name in self.LIST_ITEMS:
+            return functools.partial(self.get_items, self.ITEMS[name][0],
+                                     self.ITEMS[name][1], self.ITEMS[name][2])
 
     ITEMS = {'accessory': ('accessory/%s', 'Accessory'),
              'character': ('character/%s', 'Character'),
@@ -125,33 +147,76 @@ class Api:
              # doesn't seem to be working at this time
              # 'video_type': ('video_type/%s', 'VideoType')}
              }
-    '''
+
     LIST_ITEMS = {
-                  'accessories': ('accessories/', ),
-                  'characters': ('characters/', ),
+                  'accessories': ('accessories/',('field_list', 'limit',
+                                                  'offset', 'sort', 'filter'),
+                                   'Accessory'),
+                  'characters': ('characters/', ('field_list', 'limit',
+                                                 'offset', 'sort', 'filter'),
+                                 'Character'),
                   # seems that chat has no data yet
                   # 'chats': ('chats/', ),
-                  'companys': ('companys/', ),
-                  'concepts': ('concepts/', ),
-                  'franchises': ('franchises/', ),
-                  'games': ('games/', ),
-                  'game_ratings': ('game_ratings/', ),
-                  'genres': ('genres/', ),
-                  'locations': ('locations/', ),
-                  'objects': ('objects/', ),
-                  'people': ('people/', ),
-                  'platforms': ('platforms/', ),
-                  'promos': ('promos/', ),
-                  'rating_boards': ('rating_boards/', ),
-                  'regions': ('regions/', ),
-                  'releases': ('releases/', ),
-                  'reviews': ('reviews/', ),
-                  'themes': ('themes/', ),
-                  'types': ('types/', ),
-                  'user_reviews': ('user_reviews/', ),
-                  'videos': ('videos/', ),
-                  'video_types': ('video_types/', )}
-    '''
+                  'companies': ('companies/', ('field_list', 'limit', 'offset',
+                                               'sort', 'filter'),
+                                'Companies'),
+                  'concepts': ('concepts/', ('field_list', 'limit', 'offset',
+                                             'sort', 'filter'),
+                               'Concepts'),
+                  'franchises': ('franchises/', ('field_list', 'limit',
+                                                 'offset', 'sort', 'filter'),
+                                 'Franchises'),
+                  'games': ('games/', ('field_list', 'limit', 'offset',
+                                       'platforms', 'sort', 'filter'),
+                            'Games'),
+                  'game_ratings': ('game_ratings/', ('field_list', 'limit',
+                                                     'offset', 'sort',
+                                                     'filter'),
+                                   'GameRatings'),
+                  'genres': ('genres/', ('field_list', 'limit', 'offset'),
+                             'Genres'),
+                  'locations': ('locations/', ('field_list', 'limit', 'offset',
+                                               'sort', 'filter'),
+                                'Locations'),
+                  'objects': ('objects/', ('field_list', 'limit', 'offset',
+                                           'sort', 'filter'),
+                              'Objects'),
+                  'people': ('people/', ('field_list', 'limit', 'offset',
+                                         'sort', 'filter'),
+                             'People'),
+                  'platforms': ('platforms/', ('field_list', 'limit', 'offset',
+                                               'sort', 'filter'),
+                                'Platforms'),
+                  'promos': ('promos/', ('field_list', 'limit', 'offset',
+                                         'sort', 'filter'),
+                             'Promos'),
+                  'rating_boards': ('rating_boards/', ('field_list', 'limit',
+                                                       'offset', 'sort',
+                                                       'filter'),
+                                    'RatingBoards'),
+                  'regions': ('regions/', ('field_list', 'limit', 'offset',
+                                           'sort', 'filter'),
+                              'Regions'),
+                  'releases': ('releases/', ('field_list', 'limit', 'offset',
+                                             'platforms', 'sort', 'filter'),
+                               'Releases'),
+                  'reviews': ('reviews/', ('field_list', 'limit', 'offset',
+                                           'sort', 'filter'),
+                              'Reviews'),
+                  'themes': ('themes/', ('field_list', 'limit', 'offset',
+                                         'sort', 'filter'),
+                             'Themes'),
+                  'types': ('types/', ('filter', ), 'Types'),
+                  'user_reviews': ('user_reviews/', ('field_list', 'game',
+                                                     'limit', 'offset', 'sort',
+                                                     'filter'),
+                                   'UserReviews'),
+                  'videos': ('videos/', ('field_list', 'limit', 'offset',
+                                         'sort', 'filter'),
+                             'Videos'),
+                  'video_types': ('video_types/', ('field_list', 'limit',
+                                                   'offset'),
+                                  'VideoTypes')}
 
     def get_franchises(self, offset=0, limit=None):
         '''
@@ -255,8 +320,16 @@ class SimpleObject(object):
 
 for _, VALUE in Api.ITEMS.iteritems():
     globals()[VALUE[1]] = type(VALUE[1], (SimpleObject,), {})
+for _, VALUE in Api.LIST_ITEMS.iteritems():
+    globals()[VALUE[2]] = type(VALUE[2], (SimpleObject,), {})
 
 
+class SearchResult(SimpleObject):
+    '''Reprensents search results'''
+
+    pass
+
+"""
 class Game(SimpleObject):
     '''Reprensents a Game'''
 
@@ -292,12 +365,6 @@ class Platform(SimpleObject):
             self = self._platforms[self.id]
         else:
             self._platforms[self.id] = self
-
-
-class SearchResult(SimpleObject):
-    '''Reprensents search results'''
-
-    pass
 
 
 class Image(SimpleObject):
@@ -338,3 +405,4 @@ class Videos(SimpleObject):
             self.image = Image(kwargs.pop('image', None))
 
         super(Videos, self).__init__(json=json, **kwargs)
+"""
