@@ -148,10 +148,9 @@ class Api:
              # 'video_type': ('video_type/%s', 'VideoType')}
              }
 
-    LIST_ITEMS = {
-                  'accessories': ('accessories/',('field_list', 'limit',
-                                                  'offset', 'sort', 'filter'),
-                                   'Accessory'),
+    LIST_ITEMS = {'accessories': ('accessories/', ('field_list', 'limit',
+                                                   'offset', 'sort', 'filter'),
+                                  'Accessory'),
                   'characters': ('characters/', ('field_list', 'limit',
                                                  'offset', 'sort', 'filter'),
                                  'Character'),
@@ -217,62 +216,6 @@ class Api:
                   'video_types': ('video_types/', ('field_list', 'limit',
                                                    'offset'),
                                   'VideoTypes')}
-
-    def get_franchises(self, offset=0, limit=None):
-        '''
-        Get the franchises:
-        http://www.giantbomb.com/api/documentation#toc-0-13
-        '''
-
-        params = {"offset": offset}
-        if limit is not None:
-            params['limit'] = limit
-
-        url = self._build_url("franchises", params=params)
-
-        franchise = simplejson.load(urllib2.urlopen(url))
-        return [Franchise(x)
-                for x in check_response(franchise)]
-
-    def get_games(self, plat=None, offset=0, gbfilter=None, limit=None):
-        '''
-        Get the games
-        http://www.giantbomb.com/api/documentation#toc-0-15
-        '''
-
-        params = {"offset": offset}
-        if plat is not None:
-            if type(plat).__name__ != 'int':
-                plat = plat.id
-            params['platforms'] = plat
-        if gbfilter is not None:
-            params['filter'] = gbfilter
-        if limit is not None:
-            params['limit'] = limit
-
-        url = self._build_url("games", params=params)
-
-        games = simplejson.load(urllib2.urlopen(url))
-        return [SearchResult(x)
-                for x in check_response(games)]
-
-    def get_platforms(self, offset=0, gbfilter=None, limit=None):
-        '''
-        Get the platforms
-        http://www.giantbomb.com/api/documentation#toc-0-27
-        '''
-
-        params = {"offset": offset}
-        if gbfilter is not None:
-            params['filter'] = gbfilter
-        if limit is not None:
-            params['limit'] = limit
-
-        url = self._build_url("platforms", params=params)
-
-        platforms = simplejson.load(urllib2.urlopen(url))
-        return [Platform(x)
-                for x in check_response(platforms)]
 
     def search(self, query, offset=0, resources=None, gbfilter=None,
                limit=None):
@@ -365,6 +308,12 @@ class Platform(SimpleObject):
             self = self._platforms[self.id]
         else:
             self._platforms[self.id] = self
+
+
+class Image(SimpleObject):
+    '''Represents the collection of images in different returns'''
+
+    pass
 
 
 class Image(SimpleObject):
