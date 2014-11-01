@@ -41,7 +41,7 @@ def check_response(resp):
                                                     resp['error']))
 
 
-class Api:
+class Api(object):
     '''
     The primary interface for the GiantBomb module.  Instantiate this with
     your api key and then call the appropriate methods to access the data
@@ -96,17 +96,16 @@ class Api:
         '''
 
         params = {}
-        for idx, arg in args.enumerate():
+        idx = 0
+        for idx, arg in enumerate(args):
             params[valid_args[idx]] = arg
-        for key, value in kwargs:
+        for key, value in kwargs.iteritems():
             idx += 1
             params[key] = value
         url = self._build_url(uri, params)
         resp = simplejson.load(urllib2.urlopen(url))
         new_cls = globals()[cls]
-        obj = new_cls(check_response(resp))
-
-        return obj
+        return [new_cls(x) for x in check_response(resp)]
 
     def __getattr__(self, name):
         '''
@@ -119,8 +118,9 @@ class Api:
             return functools.partial(self.get_item, self.ITEMS[name][0],
                                      self.ITEMS[name][1])
         if name in self.LIST_ITEMS:
-            return functools.partial(self.get_items, self.ITEMS[name][0],
-                                     self.ITEMS[name][1], self.ITEMS[name][2])
+            return functools.partial(self.get_items, self.LIST_ITEMS[name][0],
+                                     self.LIST_ITEMS[name][1],
+                                     self.LIST_ITEMS[name][2])
 
     ITEMS = {'accessory': ('accessory/%s', 'Accessory'),
              'character': ('character/%s', 'Character'),
@@ -143,78 +143,77 @@ class Api:
              'review': ('review/%s', 'Review'),
              'theme': ('theme/%s', 'Theme'),
              'user_review': ('user_review/%s', 'UserReview'),
-             'video': ('video/%s', 'Video')
              # doesn't seem to be working at this time
              # 'video_type': ('video_type/%s', 'VideoType')}
-             }
+             'video': ('video/%s', 'Video')}
 
-    LIST_ITEMS = {'accessories': ('accessories/', ('field_list', 'limit',
-                                                   'offset', 'sort', 'filter'),
+    LIST_ITEMS = {'accessories': ('accessories', ('field_list', 'limit',
+                                                  'offset', 'sort', 'filter'),
                                   'Accessory'),
-                  'characters': ('characters/', ('field_list', 'limit',
-                                                 'offset', 'sort', 'filter'),
+                  'characters': ('characters', ('field_list', 'limit',
+                                                'offset', 'sort', 'filter'),
                                  'Character'),
                   # seems that chat has no data yet
-                  # 'chats': ('chats/', ),
-                  'companies': ('companies/', ('field_list', 'limit', 'offset',
-                                               'sort', 'filter'),
+                  # 'chats': ('chats', ),
+                  'companies': ('companies', ('field_list', 'limit', 'offset',
+                                              'sort', 'filter'),
                                 'Companies'),
-                  'concepts': ('concepts/', ('field_list', 'limit', 'offset',
-                                             'sort', 'filter'),
+                  'concepts': ('concepts', ('field_list', 'limit', 'offset',
+                                            'sort', 'filter'),
                                'Concepts'),
-                  'franchises': ('franchises/', ('field_list', 'limit',
-                                                 'offset', 'sort', 'filter'),
+                  'franchises': ('franchises', ('field_list', 'limit',
+                                                'offset', 'sort', 'filter'),
                                  'Franchises'),
-                  'games': ('games/', ('field_list', 'limit', 'offset',
-                                       'platforms', 'sort', 'filter'),
+                  'games': ('games', ('field_list', 'limit', 'offset',
+                                      'platforms', 'sort', 'filter'),
                             'Games'),
-                  'game_ratings': ('game_ratings/', ('field_list', 'limit',
-                                                     'offset', 'sort',
-                                                     'filter'),
+                  'game_ratings': ('game_ratings', ('field_list', 'limit',
+                                                    'offset', 'sort',
+                                                    'filter'),
                                    'GameRatings'),
-                  'genres': ('genres/', ('field_list', 'limit', 'offset'),
+                  'genres': ('genres', ('field_list', 'limit', 'offset'),
                              'Genres'),
-                  'locations': ('locations/', ('field_list', 'limit', 'offset',
-                                               'sort', 'filter'),
+                  'locations': ('locations', ('field_list', 'limit', 'offset',
+                                              'sort', 'filter'),
                                 'Locations'),
-                  'objects': ('objects/', ('field_list', 'limit', 'offset',
-                                           'sort', 'filter'),
+                  'objects': ('objects', ('field_list', 'limit', 'offset',
+                                          'sort', 'filter'),
                               'Objects'),
-                  'people': ('people/', ('field_list', 'limit', 'offset',
-                                         'sort', 'filter'),
+                  'people': ('people', ('field_list', 'limit', 'offset',
+                                        'sort', 'filter'),
                              'People'),
-                  'platforms': ('platforms/', ('field_list', 'limit', 'offset',
-                                               'sort', 'filter'),
+                  'platforms': ('platforms', ('field_list', 'limit', 'offset',
+                                              'sort', 'filter'),
                                 'Platforms'),
-                  'promos': ('promos/', ('field_list', 'limit', 'offset',
-                                         'sort', 'filter'),
+                  'promos': ('promos', ('field_list', 'limit', 'offset',
+                                        'sort', 'filter'),
                              'Promos'),
-                  'rating_boards': ('rating_boards/', ('field_list', 'limit',
-                                                       'offset', 'sort',
-                                                       'filter'),
+                  'rating_boards': ('rating_boards', ('field_list', 'limit',
+                                                      'offset', 'sort',
+                                                      'filter'),
                                     'RatingBoards'),
-                  'regions': ('regions/', ('field_list', 'limit', 'offset',
-                                           'sort', 'filter'),
+                  'regions': ('regions', ('field_list', 'limit', 'offset',
+                                          'sort', 'filter'),
                               'Regions'),
-                  'releases': ('releases/', ('field_list', 'limit', 'offset',
-                                             'platforms', 'sort', 'filter'),
+                  'releases': ('releases', ('field_list', 'limit', 'offset',
+                                            'platforms', 'sort', 'filter'),
                                'Releases'),
-                  'reviews': ('reviews/', ('field_list', 'limit', 'offset',
-                                           'sort', 'filter'),
+                  'reviews': ('reviews', ('field_list', 'limit', 'offset',
+                                          'sort', 'filter'),
                               'Reviews'),
-                  'themes': ('themes/', ('field_list', 'limit', 'offset',
-                                         'sort', 'filter'),
+                  'themes': ('themes', ('field_list', 'limit', 'offset',
+                                        'sort', 'filter'),
                              'Themes'),
-                  'types': ('types/', ('filter', ), 'Types'),
-                  'user_reviews': ('user_reviews/', ('field_list', 'game',
-                                                     'limit', 'offset', 'sort',
-                                                     'filter'),
+                  'types': ('types', ('filter', ), 'Types'),
+                  'user_reviews': ('user_reviews', ('field_list', 'game',
+                                                    'limit', 'offset', 'sort',
+                                                    'filter'),
                                    'UserReviews'),
-                  'videos': ('videos/', ('field_list', 'limit', 'offset',
-                                         'sort', 'filter'),
+                  'videos': ('videos', ('field_list', 'limit', 'offset',
+                                        'sort', 'filter'),
                              'Videos'),
-                  'video_types': ('video_types/', ('field_list', 'limit',
-                                                   'offset'),
+                  'video_types': ('video_types', ('field_list', 'limit',
+                                                  'offset'),
                                   'VideoTypes')}
 
     def search(self, query, offset=0, resources=None, gbfilter=None,
@@ -255,7 +254,8 @@ class SimpleObject(object):
     def __init__(self, json=None, **kwargs):
         if json:
             self.__dict__.update(json)
-        self.__dict__.update(kwargs)
+        if kwargs:
+            self.__dict__.update(kwargs)
 
     def __repr__(self):
         return Api.default_repr(self)

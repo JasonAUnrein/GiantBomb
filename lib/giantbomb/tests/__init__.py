@@ -33,13 +33,13 @@ class SanityTest(unittest.TestCase):
 
     def test_get_franchises(self):
         results = self.gb.get_franchises(offset=1)[0]
-        self.assertTrue(isinstance(results, giantbomb.Franchise))
+        self.assertTrue(isinstance(results, giantbomb.Franchises))
 
         results = self.gb.get_franchises(limit=2)[0]
-        self.assertTrue(isinstance(results, giantbomb.Franchise))
+        self.assertTrue(isinstance(results, giantbomb.Franchises))
 
         results = self.gb.get_franchises(offset=1, limit=10)
-        self.assertTrue(isinstance(results[0], giantbomb.Franchise))
+        self.assertTrue(isinstance(results[0], giantbomb.Franchises))
         self.assertEqual(len(results), 10)
 
     def test_get_game(self):
@@ -56,37 +56,37 @@ class SanityTest(unittest.TestCase):
 
     def test_get_games(self):
         results = self.gb.get_games(plat=self.plat_id)[0]
-        self.assertTrue(isinstance(results, giantbomb.SearchResult))
+        self.assertTrue(isinstance(results, giantbomb.Games))
 
         results = self.gb.get_games(plat=self.plat_id, offset=10)[0]
-        self.assertTrue(isinstance(results, giantbomb.SearchResult))
+        self.assertTrue(isinstance(results, giantbomb.Games))
 
         results = self.gb.get_games(offset=10)[0]
-        self.assertTrue(isinstance(results, giantbomb.SearchResult))
+        self.assertTrue(isinstance(results, giantbomb.Games))
 
         results = self.gb.get_games(plat=self.plat_id, offset=10,
                                     gbfilter={'name': self.game_title})[0]
-        self.assertTrue(isinstance(results, giantbomb.SearchResult))
+        self.assertTrue(isinstance(results, giantbomb.Games))
 
         results = self.gb.get_games(plat=self.plat_id,
                                     gbfilter={'name': self.game_title})[0]
-        self.assertTrue(isinstance(results, giantbomb.SearchResult))
+        self.assertTrue(isinstance(results, giantbomb.Games))
 
         results = self.gb.get_games(plat=self.plat_id, limit=10,
                                     gbfilter={'name': self.game_title})
-        self.assertTrue(isinstance(results[0], giantbomb.SearchResult))
+        self.assertTrue(isinstance(results[0], giantbomb.Games))
         self.assertEqual(len(results), 10)
 
     def test_get_platforms(self):
         results = self.gb.get_platforms(offset=42)[0]
-        self.assertTrue(isinstance(results, giantbomb.Platform))
+        self.assertTrue(isinstance(results, giantbomb.Platforms))
 
         results = self.gb.get_platforms(offset=1,
                                         gbfilter={'name': self.plat_name})[0]
-        self.assertTrue(isinstance(results, giantbomb.Platform))
+        self.assertTrue(isinstance(results, giantbomb.Platforms))
 
         results = self.gb.get_platforms(offset=1, limit=10)
-        self.assertTrue(isinstance(results[0], giantbomb.Platform))
+        self.assertTrue(isinstance(results[0], giantbomb.Platforms))
         self.assertEqual(len(results), 10)
 
     def test_search(self):
